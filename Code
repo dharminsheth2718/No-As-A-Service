@@ -1,1 +1,29 @@
+from fastapi import FastAPI, Request,HTTPException
+from fastapi.responses import JSONResponse
+import json
+import random
 
+app = FastAPI(title="NaaS: No-as-a-Service")
+
+def load_data():
+    try:
+        with open('reasons.json', 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return ["No."]
+
+def save_data(data):
+    with open('reasons.json', 'w') as f:
+        json.dump(data, f, indent=4)
+
+@app.get('/{user_input}')
+def get_no(user_input: str):
+    if user_input.lower() == "no":
+        data = load_data()
+        return {"reason": random.choice(data)}
+    raise HTTPException(status_code=404)
+
+
+@app.exception_handler(404)
+def error_handling(request: Request, exc: Exception):
+    return JSONResponse(status_code=404, content={"error": "No excuses"})
